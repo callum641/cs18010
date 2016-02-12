@@ -1,2 +1,2 @@
 # cs18010
-public repisitory for our cs18010 group project
+public repository for our cs18010 group project

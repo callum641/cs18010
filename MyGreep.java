@@ -43,38 +43,57 @@ import greenfoot.*;  // (World, Actor, GreenfootImage, and Greenfoot)
  */
 public class MyGreep extends Greep
 {
+    private static final int TOMATO_LOCATION_KNOWN = 1;
+    private static final double WALKING_SPEED = 20.0;
+    private static final int KNOCK_OUT_TIME = 0;
     // Remember: you cannot extend the Greep's memory. So:
     // no additional fields (other than final fields) allowed in this class!
-    
+
     /**
      * Default constructor. Do not remove.
      */
     public MyGreep(Ship ship)
     {
         super(ship);
+        setFlag(1, true);
     }
-    
+
     /**
      * Do what a greep's gotta do.
      */
     public void act()
     {
         super.act();   // do not delete! leave as first statement in act().
+
         if (carryingTomato()) {
-            if(atShip()) {
-                dropTomato();
-            }
-            else {
-                turnHome();
-                move();
-            }
+            checkFood();
         }
+        else if(getTomatoes() != null) {            
+            TomatoPile tomatoes = getTomatoes(); 
+
+        }
+        else if (getMemory(0) == TOMATO_LOCATION_KNOWN) {
+            // Hmm. We know where there are some tomatoes...
+            turnTowards(getMemory(1), getMemory(2));
+            move();
+        }
+        else if (numberOfOpponents(false) > 10) {
+            // Can we see four or more opponents?
+            kablam();            
+        } 
         else {
             randomWalk();
             checkFood();
         }
+        if (atWater() || moveWasBlocked()) {
+            // If we were blocked, try to move somewhere else
+            int r = getRotation();
+            setRotation (r + Greenfoot.getRandomNumber(2) * 180 - 90);
+            move();
+        }        
+
     }
-    
+
     /** 
      * Move forward, with a slight chance of turning randomly
      */
@@ -84,8 +103,19 @@ public class MyGreep extends Greep
         if (randomChance(3)) {
             turn((Greenfoot.getRandomNumber(3) - 1) * 100);
         }
-        
+
         move();
+        Ship ship = (Ship) getOneIntersectingObject(Ship.class);
+
+        if((ship != null) && getFlag(1) == true)
+
+        {
+
+            setRotation(5);
+
+            setFlag(1, false);
+
+        }
     }
 
     /**
@@ -93,21 +123,28 @@ public class MyGreep extends Greep
      */
     public void checkFood()
     {
-        // check whether there's a tomato pile here
         TomatoPile tomatoes = getTomatoes();
         if(tomatoes != null) {
             loadTomato();
             // Note: this attempts to load a tomato onto *another* Greep. It won't
             // do anything if we are alone here.
+
+            setMemory(0, TOMATO_LOCATION_KNOWN);
+            setMemory(1, tomatoes.getX());
+            setMemory(2, tomatoes.getY());
+
         }
+
     }
 
-    /**
-     * This method specifies the name of the greeps (for display on the result board).
-     * Try to keep the name short so that it displays nicely on the result board.
-     */
-    public String getName()
-    {
-        return "Your name here";  // write your name here!
-    }
+
+/**
+ * This method specifies the name of the greeps (for display on the result board).
+ * Try to keep the name short so that it displays nicely on the result board.
+ */
+public String getName()
+{
+return "Callum";  // write your name here!
 }
+}
+

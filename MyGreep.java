@@ -43,38 +43,65 @@ import greenfoot.*;  // (World, Actor, GreenfootImage, and Greenfoot)
  */
 public class MyGreep extends Greep
 {
+    private static final int TOMATO_LOCATION_KNOWN = 1;
+
     // Remember: you cannot extend the Greep's memory. So:
     // no additional fields (other than final fields) allowed in this class!
-    
+
     /**
      * Default constructor. Do not remove.
      */
     public MyGreep(Ship ship)
     {
         super(ship);
+
     }
-    
+
     /**
      * Do what a greep's gotta do.
      */
     public void act()
     {
         super.act();   // do not delete! leave as first statement in act().
+        checkFood();
         if (carryingTomato()) {
-            if(atShip()) {
-                dropTomato();
-            }
-            else {
-                turnHome();
+            bringTomatoHome();
+        }
+        else if(getTomatoes() != null) {            
+            TomatoPile tomatoes = getTomatoes(); 
+            if(!blockAtPile(tomatoes)) {
+                // Not blocking so lets go towards the centre of the pile
+                turnTowards(tomatoes.getX(), tomatoes.getY());
                 move();
             }
         }
-        else {
-            randomWalk();
-            checkFood();
+        else if (getMemory(0) == TOMATO_LOCATION_KNOWN) {
+            // Hmm. We know where there are some tomatoes...
+            turnTowards(getMemory(1), getMemory(2));
+            move();
         }
+        else if (numberOfOpponents(true) > numberOfFriends(true)) {
+            // Can we see four or more opponents?
+            kablam();            
+        } 
+        
+        else if(moveWasBlocked())
+        {
+            kablam();
+        }
+        else{
+            randomWalk();
+
+        }
+        if (atWater() || moveWasBlocked()) {
+            // If we were blocked, try to move somewhere else
+            int r = getRotation();
+            setRotation (r + Greenfoot.getRandomNumber(2) * 180 - 90);
+            move();
+        }        
+
     }
-    
+
     /** 
      * Move forward, with a slight chance of turning randomly
      */
@@ -84,8 +111,9 @@ public class MyGreep extends Greep
         if (randomChance(3)) {
             turn((Greenfoot.getRandomNumber(3) - 1) * 100);
         }
-        
+
         move();
+
     }
 
     /**
@@ -93,13 +121,57 @@ public class MyGreep extends Greep
      */
     public void checkFood()
     {
-        // check whether there's a tomato pile here
         TomatoPile tomatoes = getTomatoes();
         if(tomatoes != null) {
             loadTomato();
             // Note: this attempts to load a tomato onto *another* Greep. It won't
             // do anything if we are alone here.
+
+            setMemory(0, TOMATO_LOCATION_KNOWN);
+            setMemory(1, tomatoes.getX());
+            setMemory(2, tomatoes.getY());
+
         }
+
+    }
+
+    private void bringTomatoHome() 
+    {
+        if(atShip()) {
+            dropTomato();
+        }
+        else if (atWater() || moveWasBlocked()){
+            int r = getRotation();
+            setRotation (r + Greenfoot.getRandomNumber(2) * 180 - 90);
+            move();
+            turnHome();
+        }
+        else {
+            turnHome();
+            move();
+        }
+    }
+
+
+    private boolean blockAtPile(TomatoPile tomatoes) 
+    {
+        // Are we at the centre of the pile of tomatoes?  
+        boolean atPileCentre = tomatoes != null && distanceTo(tomatoes.getX(), tomatoes.getY()) < 4;
+        if(atPileCentre && getFriend() == null ) {
+            // No friends at this pile, so we might as well block
+            block(); 
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    private int distanceTo(int x, int y)
+    {
+        int deltaX = getX() - x;
+        int deltaY = getY() - y;
+        return (int) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     }
 
     /**
@@ -108,6 +180,7 @@ public class MyGreep extends Greep
      */
     public String getName()
     {
-        return "Your name here";  // write your name here!
+        return "Callum";  // write your name here!
     }
 }
+
